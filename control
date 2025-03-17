@@ -1,0 +1,9 @@
+Package: com.0xilis.appleid-key-dumper
+Name: appleid-key-dumper
+Author: Snoolie K
+Description: Dump Apple ID Keys and Certs for OpenAirdrop/shortcut-sign
+Depends: firmware (>= 11.0)
+Maintainer: Snoolie K
+Architecture: iphoneos-arm
+Section: Tweaks
+Version: 1.0.0
