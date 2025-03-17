@@ -1,0 +1,5 @@
+packages/
+.theos/
+appleid-key-dumper
+c.sh
+.DS_Store
