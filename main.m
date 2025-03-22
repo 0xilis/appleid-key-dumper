@@ -52,11 +52,13 @@ int main(void) {
         @"SigningPublicKeySignature" : signature,
         @"AppleIDValidationRecord" : [account validationRecord],
     }];
+
+    NSData *authData = [NSKeyedArchiver archivedDataWithRootObject:dict];
     
     printf("writing to file...\n");
 
     mkdir("/var/mobile/Documents/appleid-key-dumper", 0755);
-    [dict writeToFile:@"/var/mobile/Documents/appleid-key-dumper/authData.plist" atomically:FALSE];
+    [authData writeToFile:@"/var/mobile/Documents/appleid-key-dumper/authData.plist" atomically:FALSE];
 
     CFErrorRef errorer = NULL; /* its called errorer because its more error */
     CFDataRef keyData = SecKeyCopyExternalRepresentation(key, &errorer);
