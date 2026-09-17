@@ -42,18 +42,35 @@ int main(void) {
     CFDataRef data = SecKeyCopyExternalRepresentation(pubKey, &error);
     NSData *signature = (__bridge NSData *)SecKeyCreateSignature(privateKey, kSecKeyAlgorithmRSASignatureMessagePSSSHA256, data, &error);
     
-    /* Generate auth data */
-    NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithDictionary:@{
+    /* The auth-data field is a plain plist containing the raw CMS record,
+     * not an archive of the SFAppleIDValidationRecord Objective-C object. */
+    NSData *validationRecordData = account.validationRecord.data;
+    if (validationRecordData.length == 0) {
+        fprintf(stderr, "appleid-key-dumper: missing Apple ID validation record data\n");
+        return EXIT_FAILURE;
+    }
+
+    NSDictionary *dict = @{
         @"AppleIDCertificateChain" : @[
             (__bridge NSData *)SecCertificateCopyData(cert),
             (__bridge NSData *)SecCertificateCopyData(intercert),
         ],
         @"SigningPublicKey" : signingPublicKey,
         @"SigningPublicKeySignature" : signature,
-        @"AppleIDValidationRecord" : [account validationRecord],
-    }];
+        @"AppleIDValidationRecord" : validationRecordData,
+    };
 
-    NSData *authData = [NSKeyedArchiver archivedDataWithRootObject:dict];
+    NSError *serializationError = nil;
+    NSData *authData = [NSPropertyListSerialization dataWithPropertyList:dict
+                                                               format:NSPropertyListBinaryFormat_v1_0
+                                                              options:0
+                                                                error:&serializationError];
+    if (!authData) {
+        const char *message = serializationError.localizedDescription.UTF8String;
+        fprintf(stderr, "appleid-key-dumper: failed to serialize auth data: %s\n",
+                message ? message : "unknown error");
+        return EXIT_FAILURE;
+    }
     
     printf("writing to file...\n");
 
